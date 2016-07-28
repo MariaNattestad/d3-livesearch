@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Live search examples</title>
+</head>
+
+
+
+<body>
+<div id="search1"></div>
+
+<div id="chart">
+
+</body>
+
+
+<script src="d3.v3.min.js"></script>
+<script src="d3-livesearch.js"></script>
+
+
+
+<script>
+
+function select_gene() {
+	console.log("selecting gene");
+}
+
+function select_chromosome() {
+	console.log("selecting chromosome");
+}
+
+var annotation = [
+			{"chromosome":"1", "start": 934342, "end": 935552, "name":"ENSG00000188290.6","strand":"-","type":"protein_coding","gene":"ABCD"},
+			{"chromosome":"1", "start": 955503, "end": 991496, "name":"ENSG00000188157.9","strand":"+","type":"protein_coding","gene":"CDEF"}		
+];
+
+var chromosomes = ["chr1","chr2","chr3","MT","chrX","chrY"];
+
+var items = [
+    {label : 'Genes', func : select_gene, search_list: annotation},
+    {label : 'Chromosomes', func : select_chromosome, search_list : chromosomes}
+];
+
+// we can increase this, everything will scale up with us
+var w=960,h=500,
+    svg=d3.select("#chart")
+        .append("svg")
+        .attr("width",w)
+        .attr("height",h);
+
+
+// var tb = 
+// now we apply the returned function object my == tb on an enter selection
+var item = d3.select("body").selectAll("div.livesearch").data(items).enter().append("div").attr("class","livesearch").call(d3.textBlock()
+	.label(function(d) {return d.label;})
+	.selection_function(function(d) {return d.func;}));
+
+// var item = svg.selectAll("rect")
+//     .data(items)
+//   .enter()
+//     .append("svg:g")
+//     .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+//     .call(tb);
+
+
+// var search1 = d3.livesearch().label(function(d) {return d.label});
+
+// d3.select("#search1").call(search1);
+
+</script>
+
+</html>
+
