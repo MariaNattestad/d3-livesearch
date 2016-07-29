@@ -1,65 +1,127 @@
-d3.textBlock = function() {
-    // label property: this will get drawn enclosed perfectly by a rect
-    var label = "";
+d3.livesearch = function() {
+    
     var selection_function = undefined;
+    var list = [];
+    var dictkey = "";
+    var max_suggestions_to_show = 10;
 
-    // this function object is returned when textBlock() is invoked.
-    // after setting properties (label above), it can be invoked on
-    // a whole selection by using call() -- see the rest of the example.
+    // This happens when we do .call() on a d3 selection
     function my(selection) {
         selection.each(function(d, i) {
-            // inside here, d is the current data item, i is its index.
-            // "this" is the element that has been appended, in the case of
-            // this example, a svg:g
-
-            // the text property could have been specified by the user as a
-            // value, or a function of the current data item.
-            var labelvar = (typeof(label) === "function" ? label(d) : label);
-            var selection_function_var = selection_function(d);
-
-            // convert element (svg:g) into something that D3 can use
-            // element is a single-element selection
+                        
             var element = d3.select(this);
 
-            // first append text to svg:g
-            // var t = element.append("text")
-            //     .text(labelvar) // here we set the label property on the text element
-            //     .attr("dominant-baseline", "central"); // vertically centered
-            // get the bounding box of the just created text element
-            // var bb = t[0][0].getBBox();
+            // Can be a value or a function of d
+            this.search_list = (typeof(list) === "function" ? list(d) : list);
+            this.search_key = (typeof(dictkey) === "function" ? dictkey(d) : dictkey);
+            this.highlighted_index = 0;
+            this.max_suggestions_to_show = (typeof(max_suggestions_to_show) === "function" ? max_suggestions_to_show(d) : max_suggestions_to_show);
+            this.selection_function = selection_function(d);
 
-            // then append svg rect to svg:g
-            // doing some adjustments so we fit snugly around the text: we're
-            // inside a transform, so only have to move relative to 0
-    //         element.append("rect")
-				// .attr("x", -5) // 5px margin
-    //             .attr("y", - bb.height) // so text is vertically within block
-    //             .attr("width", bb.width + 10) // 5px margin on left + right
-    //             .attr("height", bb.height * 2)
-    //             .attr("fill", "steelblue")
-    //             .attr("fill-opacity", 0.3)
-    //             .attr("stroke", "black")
-    //             .attr("stroke-width", 2)
-            
-            element.append("button").on("click",selection_function_var).html(labelvar);
-            element.append("input").property("type","text");
-            
-            
-
+            // element.append("button").on("click",selection_function_var).html(labelvar);
+            element.append("input").property("type","text").attr("class","d3-livesearch-input").on("keyup",my.typing);
+            element.append("ul").attr("class","d3-livesearch-suggestions");
         });
     }
 
-    // getter / setter for the label property
-    my.label = function(value) {
-        if (!arguments.length) return value;
-        label = value;
+    my.typing = function(d){
+        var key = d3.event.keyCode;
+        var parent = d3.select(this.parentNode);
+        
+        if (key == 13) { // Enter/Return key
+            // selectGene(d3.select("#select_" + highlighted_index).property("value"));
+            console.log(this.parentNode.highlighted_index);
+            return;
+        } else if (key == 40) { // down arrow
+            // d3.select("#select_" + highlighted_index).attr("class","unselected")
+            this.parentNode.highlighted_index++;
+            console.log(this.parentNode.highlighted_index);
+            // d3.select("#select_" + highlighted_index).attr("class","selected")
+            return;
+        } else if (key == 38) { // up arrow
+            // d3.select("#select_" + highlighted_index).attr("class","unselected")
+            this.parentNode.highlighted_index--;
+            console.log(this.parentNode.highlighted_index);
+            // d3.select("#select_" + highlighted_index).attr("class","selected")
+            return; 
+        }
+        
+        parent.select("ul").append("li").html(key);
+
+        var search_key = this.parentNode.search_key;
+        var search_list = this.parentNode.search_list;
+        var search_value = this.value;
+
+        if (search_value.length==0) { 
+            parent.select("ul").html("");
+            parent.select("ul").style("border","0px");
+            return;
+        }
+        
+        var max_suggestions_to_show = this.parentNode.max_suggestions_to_show;
+        var num_suggestions = 0;
+        
+        parent.select("ul").selectAll("li").remove();
+
+        var matching_data = [];
+        if (search_key != undefined){
+            for (var i in search_list) {
+                if (search_list[i][search_key] == undefined) {
+                    console.log(search_key + " is not in search_list[" + i + "]");
+                } else if (search_list[i][search_key].indexOf(search_value) != -1) {
+                    matching_data.push(search_list[i]);
+                    num_suggestions++;
+                    if (num_suggestions >= max_suggestions_to_show) {
+                        // suggestions += '<li>...</li>';
+                        break;
+                    }
+                }
+            }
+        } else {
+            for (var i in search_list) {
+                if (search_list[i].indexOf(search_value) != -1) {
+                    matching_data.push(search_list[i]);
+                    num_suggestions++;
+                    if (num_suggestions >= max_suggestions_to_show) {
+                        // suggestions += '<li>...</li>';
+                        break;
+                    }
+                }
+            }
+        }
+
+        parent.select("ul").selectAll("li").data(matching_data).enter()
+            .append("li")
+                .html(function(d) {return (typeof(d) === "string") ? d : d[search_key] })
+                .on("click",this.parentNode.selection_function);
+
+        if (num_suggestions == 0) {
+            parent.select("ul").append("li").html("No matches");
+        }    
+    }
+
+    my.list = function(value) {
+        if (!arguments.length) return list;
+        list = value;
+        return my;
+    };
+    my.dictkey = function(value) {
+        if (!arguments.length) return search_key;
+        dictkey = value;
         return my;
     };
     my.selection_function = function(value) {
-        if (!arguments.length) return value;
+        if (!arguments.length) return selection_function;
         selection_function = value;
         return my;
     };
+    my.max_suggestions_to_show = function(value) {
+        if (!arguments.length) return max_suggestions_to_show;
+        max_suggestions_to_show = value;
+        return my;
+    };
+    
+
 
     return my;
 }

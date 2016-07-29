@@ -11,7 +11,7 @@
 <body>
 <div id="search1"></div>
 
-<div id="chart">
+<div id="chart"></div>
 
 </body>
 
@@ -39,11 +39,10 @@ var annotation = [
 var chromosomes = ["chr1","chr2","chr3","MT","chrX","chrY"];
 
 var items = [
-    {label : 'Genes', func : select_gene, search_list: annotation},
+    {label : 'Genes', func : select_gene, search_list: annotation, search_key: "gene"},
     {label : 'Chromosomes', func : select_chromosome, search_list : chromosomes}
 ];
 
-// we can increase this, everything will scale up with us
 var w=960,h=500,
     svg=d3.select("#chart")
         .append("svg")
@@ -51,11 +50,15 @@ var w=960,h=500,
         .attr("height",h);
 
 
-// var tb = 
+var LS = d3.livesearch()
+	.selection_function(function(d) {return d.func;})
+	.list(function(d) {return d.search_list})
+	.dictkey(function(d) {return d.search_key})
+	.max_suggestions_to_show(4);
+
+
 // now we apply the returned function object my == tb on an enter selection
-var item = d3.select("body").selectAll("div.livesearch").data(items).enter().append("div").attr("class","livesearch").call(d3.textBlock()
-	.label(function(d) {return d.label;})
-	.selection_function(function(d) {return d.func;}));
+var item = d3.select("body").selectAll("div.livesearch").data(items).enter().append("div").attr("class","livesearch").call(LS);
 
 // var item = svg.selectAll("rect")
 //     .data(items)
