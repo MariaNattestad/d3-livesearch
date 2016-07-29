@@ -4,16 +4,18 @@ d3.livesearch = function() {
     var search_list = undefined;
     var search_key = undefined;
     var max_suggestions_to_show = undefined;
+    var placeholder = "";
 
     // This happens when we do .call() on a d3 selection
     function my(selection) {
         selection.each(function(d, i) {
             var element = d3.select(this);
-
-            // Can be a value or a function of d
+            var placeholder_text = placeholder;
             
             // If livesearch is bound to data:
             if (d != undefined) {
+
+                // Can be a value or a function of d:
                 this.search_list = (typeof(search_list) === "function" ? search_list(d) : search_list);
                 if (this.search_list == undefined && d.search_list != undefined) {
                     this.search_list = d.search_list;
@@ -29,15 +31,18 @@ d3.livesearch = function() {
                 } else {
                     this.selection_function = selection_function(d);
                 }    
+                placeholder_text = (typeof(placeholder) === "function" ? placeholder(d) : placeholder);
             } else {
                 // If not bound to data:
                 this.search_list = search_list;
                 this.search_key = search_key;
                 this.selection_function = selection_function;
+                placeholder_text = placeholder;
+                this.max_suggestions_to_show = max_suggestions_to_show;
             }
-            
+            element.html("");
             // element.append("button").on("click",selection_function_var).html(labelvar);
-            element.append("input").property("type","text").attr("class","d3-livesearch-input").on("keyup",my.typing);
+            element.append("input").property("type","text").attr("class","d3-livesearch-input").on("keyup",my.typing).property("placeholder",placeholder_text);
             element.append("ul").attr("class","d3-livesearch-suggestions");
         });
     }
@@ -134,6 +139,11 @@ d3.livesearch = function() {
         }
     }
 
+    my.placeholder = function(value) {
+        if (!arguments.length) return placeholder;
+        placeholder = value;
+        return my;
+    };
     my.search_list = function(value) {
         if (!arguments.length) return search_list;
         search_list = value;

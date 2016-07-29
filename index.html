@@ -59,14 +59,13 @@ var items = [
     {label : 'Chromosomes', func : select_chromosome, search_list : chromosomes}
 ];
 
-var LS = d3.livesearch();
-	// .max_suggestions_to_show(4);
+var LS = d3.livesearch()
+	.placeholder(function(d){return d.label})
+	.max_suggestions_to_show(3);
 	// .selection_function(function(d) {return d.func;})
 	// .search_list(function(d) {return d.search_list})
 	// .search_key(function(d) {return d.search_key})
 var item = d3.select("#chart").selectAll("div.livesearch").data(items).enter().append("div").attr("class","livesearch").call(LS);
-
-
 
 
 // Creating individual livesearch boxes:
@@ -75,6 +74,7 @@ d3.select("#search_genes").call(
 		.search_list(annotation)
 		.search_key("gene")
 		.selection_function(select_gene)
+		.placeholder(annotation[0].gene)
 );
 
 d3.select("#search_chrom").call(
@@ -82,6 +82,7 @@ d3.select("#search_chrom").call(
 		.search_list(chromosomes)
 		// .search_key() // no search_key makes it work on the list items directly for when list items are not objects
 		.selection_function(select_chromosome)
+		.placeholder(chromosomes[0])
 );
 
 
