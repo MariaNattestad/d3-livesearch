@@ -12,7 +12,10 @@
 
 
 <body>
-<div id="search1"></div>
+<div id="search_genes"></div>
+
+
+<div id="search_chrom"></div>
 
 <div id="chart"></div>
 
@@ -26,8 +29,11 @@
 
 <script>
 
+
+// Some example selection_functions:  These get executed on the chosen list items after searching and selecting those list items
 function select_gene(d) {
 	console.log("selecting gene");
+	console.log(d);
 	console.log(d.gene);
 }
 
@@ -36,47 +42,48 @@ function select_chromosome(d) {
 	console.log(d);
 }
 
-var annotation = [
+// Example data to search through: (search_list)
+	// A list of objects, where one key will be chosen to search on (below we choose "gene" as the search_key);
+var annotation = [ 
 			{"chromosome":"1", "start": 934342, "end": 935552, "name":"ENSG00000188290.6","strand":"-","type":"protein_coding","gene":"ABCD"},
 			{"chromosome":"1", "start": 955503, "end": 991496, "name":"ENSG00000188157.9","strand":"+","type":"protein_coding","gene":"CDEF"}		
 ];
 
 var chromosomes = ["chr1","chr2","chr3","MT","chrX","chrY"];
 
+
+// Creating multiple livesearch boxes at once from data
+
 var items = [
     {label : 'Genes', func : select_gene, search_list: annotation, search_key: "gene"},
     {label : 'Chromosomes', func : select_chromosome, search_list : chromosomes}
 ];
 
-var w=960,h=500,
-    svg=d3.select("#chart")
-        .append("svg")
-        .attr("width",w)
-        .attr("height",h);
-
-
 var LS = d3.livesearch();
 	// .max_suggestions_to_show(4);
 	// .selection_function(function(d) {return d.func;})
-	// .list(function(d) {return d.search_list})
-	// .dictkey(function(d) {return d.search_key})
-	
+	// .search_list(function(d) {return d.search_list})
+	// .search_key(function(d) {return d.search_key})
+var item = d3.select("#chart").selectAll("div.livesearch").data(items).enter().append("div").attr("class","livesearch").call(LS);
 
 
-// now we apply the returned function object my == tb on an enter selection
-var item = d3.select("body").selectAll("div.livesearch").data(items).enter().append("div").attr("class","livesearch").call(LS);
-
-// var item = svg.selectAll("rect")
-//     .data(items)
-//   .enter()
-//     .append("svg:g")
-//     .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-//     .call(tb);
 
 
-// var search1 = d3.livesearch().label(function(d) {return d.label});
+// Creating individual livesearch boxes:
+d3.select("#search_genes").call(
+	d3.livesearch()
+		.search_list(annotation)
+		.search_key("gene")
+		.selection_function(select_gene)
+);
 
-// d3.select("#search1").call(search1);
+d3.select("#search_chrom").call(
+	d3.livesearch()
+		.search_list(chromosomes)
+		// .search_key() // no search_key makes it work on the list items directly for when list items are not objects
+		.selection_function(select_chromosome)
+);
+
 
 </script>
 

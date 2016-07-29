@@ -1,30 +1,39 @@
 d3.livesearch = function() {
     
     var selection_function = undefined;
-    var list = undefined;
-    var dictkey = undefined;
+    var search_list = undefined;
+    var search_key = undefined;
     var max_suggestions_to_show = undefined;
 
     // This happens when we do .call() on a d3 selection
     function my(selection) {
         selection.each(function(d, i) {
-                        
             var element = d3.select(this);
 
             // Can be a value or a function of d
-            this.search_list = (typeof(list) === "function" ? list(d) : list);
-            if (this.search_list == undefined && d.search_list != undefined) {
-                this.search_list = d.search_list;
-            }
-            this.search_key = (typeof(dictkey) === "function" ? dictkey(d) : dictkey);
-            if (this.search_key == undefined && d.search_key != undefined) {
-                this.search_key = d.search_key;
-            }
-            this.max_suggestions_to_show = (typeof(max_suggestions_to_show) === "function" ? max_suggestions_to_show(d) : max_suggestions_to_show);
-            if (selection_function == undefined && d.func != undefined) {
-                this.selection_function = d.func;
+            
+            // If livesearch is bound to data:
+            if (d != undefined) {
+                this.search_list = (typeof(search_list) === "function" ? search_list(d) : search_list);
+                if (this.search_list == undefined && d.search_list != undefined) {
+                    this.search_list = d.search_list;
+                }
+                this.search_key = (typeof(search_key) === "function" ? search_key(d) : search_key);
+                if (this.search_key == undefined && d.search_key != undefined) {
+                    this.search_key = d.search_key;
+                }
+                this.max_suggestions_to_show = (typeof(max_suggestions_to_show) === "function" ? max_suggestions_to_show(d) : max_suggestions_to_show);
+                
+                if (selection_function == undefined && d.func != undefined) {
+                    this.selection_function = d.func;
+                } else {
+                    this.selection_function = selection_function(d);
+                }    
             } else {
-                this.selection_function = selection_function(d);
+                // If not bound to data:
+                this.search_list = search_list;
+                this.search_key = search_key;
+                this.selection_function = selection_function;
             }
             
             // element.append("button").on("click",selection_function_var).html(labelvar);
@@ -32,7 +41,6 @@ d3.livesearch = function() {
             element.append("ul").attr("class","d3-livesearch-suggestions");
         });
     }
-
 
     my.typing = function(){
         var key = d3.event.keyCode;
@@ -126,14 +134,14 @@ d3.livesearch = function() {
         }
     }
 
-    my.list = function(value) {
-        if (!arguments.length) return list;
-        list = value;
+    my.search_list = function(value) {
+        if (!arguments.length) return search_list;
+        search_list = value;
         return my;
     };
-    my.dictkey = function(value) {
+    my.search_key = function(value) {
         if (!arguments.length) return search_key;
-        dictkey = value;
+        search_key = value;
         return my;
     };
     my.selection_function = function(value) {
