@@ -1,9 +1,9 @@
 d3.livesearch = function() {
     
     var selection_function = undefined;
-    var list = [];
-    var dictkey = "";
-    var max_suggestions_to_show = 10;
+    var list = undefined;
+    var dictkey = undefined;
+    var max_suggestions_to_show = undefined;
 
     // This happens when we do .call() on a d3 selection
     function my(selection) {
@@ -13,36 +13,55 @@ d3.livesearch = function() {
 
             // Can be a value or a function of d
             this.search_list = (typeof(list) === "function" ? list(d) : list);
+            if (this.search_list == undefined && d.search_list != undefined) {
+                this.search_list = d.search_list;
+            }
             this.search_key = (typeof(dictkey) === "function" ? dictkey(d) : dictkey);
-            this.highlighted_index = 0;
+            if (this.search_key == undefined && d.search_key != undefined) {
+                this.search_key = d.search_key;
+            }
             this.max_suggestions_to_show = (typeof(max_suggestions_to_show) === "function" ? max_suggestions_to_show(d) : max_suggestions_to_show);
-            this.selection_function = selection_function(d);
-
+            if (selection_function == undefined && d.func != undefined) {
+                this.selection_function = d.func;
+            } else {
+                this.selection_function = selection_function(d);
+            }
+            
             // element.append("button").on("click",selection_function_var).html(labelvar);
             element.append("input").property("type","text").attr("class","d3-livesearch-input").on("keyup",my.typing);
             element.append("ul").attr("class","d3-livesearch-suggestions");
         });
     }
 
-    my.typing = function(d){
+
+    my.typing = function(){
         var key = d3.event.keyCode;
         var parent = d3.select(this.parentNode);
-        
+
         if (key == 13) { // Enter/Return key
-            // selectGene(d3.select("#select_" + highlighted_index).property("value"));
-            console.log(this.parentNode.highlighted_index);
+            var selected_datum;
+            var h = this.parentNode.highlighted_index;
+            parent.select("ul").selectAll("li").attr("class",function(d,i) {if (i == h) {selected_datum = d;}return "unselected"});
+            parent.select("ul").selectAll("li").remove();
+            parent.select("input").property("value","");
+            this.parentNode.highlighted_index = 0;
+            this.parentNode.selection_function(selected_datum);
             return;
         } else if (key == 40) { // down arrow
-            // d3.select("#select_" + highlighted_index).attr("class","unselected")
             this.parentNode.highlighted_index++;
-            console.log(this.parentNode.highlighted_index);
-            // d3.select("#select_" + highlighted_index).attr("class","selected")
+            if (this.parentNode.highlighted_index  >= this.parentNode.num_suggestions) {
+                this.parentNode.highlighted_index = this.parentNode.num_suggestions - 1;
+            }
+            var h = this.parentNode.highlighted_index;
+            parent.select("ul").selectAll("li").attr("class",function(d,i) {return (i==h ? "selected" : "unselected")});
             return;
         } else if (key == 38) { // up arrow
-            // d3.select("#select_" + highlighted_index).attr("class","unselected")
             this.parentNode.highlighted_index--;
-            console.log(this.parentNode.highlighted_index);
-            // d3.select("#select_" + highlighted_index).attr("class","selected")
+            if (this.parentNode.highlighted_index < 0) {
+                this.parentNode.highlighted_index = 0;
+            }
+            var h = this.parentNode.highlighted_index;
+            parent.select("ul").selectAll("li").attr("class",function(d,i) {return (i==h  ? "selected"  : "unselected")});
             return; 
         }
         
@@ -59,7 +78,7 @@ d3.livesearch = function() {
         }
         
         var max_suggestions_to_show = this.parentNode.max_suggestions_to_show;
-        var num_suggestions = 0;
+        this.parentNode.num_suggestions = 0;
         
         parent.select("ul").selectAll("li").remove();
 
@@ -70,9 +89,8 @@ d3.livesearch = function() {
                     console.log(search_key + " is not in search_list[" + i + "]");
                 } else if (search_list[i][search_key].indexOf(search_value) != -1) {
                     matching_data.push(search_list[i]);
-                    num_suggestions++;
-                    if (num_suggestions >= max_suggestions_to_show) {
-                        // suggestions += '<li>...</li>';
+                    this.parentNode.num_suggestions++;
+                    if (max_suggestions_to_show != undefined && this.parentNode.num_suggestions >= max_suggestions_to_show) {
                         break;
                     }
                 }
@@ -81,23 +99,31 @@ d3.livesearch = function() {
             for (var i in search_list) {
                 if (search_list[i].indexOf(search_value) != -1) {
                     matching_data.push(search_list[i]);
-                    num_suggestions++;
-                    if (num_suggestions >= max_suggestions_to_show) {
-                        // suggestions += '<li>...</li>';
+                    this.parentNode.num_suggestions++;
+                    if (max_suggestions_to_show != undefined && this.parentNode.num_suggestions >= max_suggestions_to_show) {
                         break;
                     }
                 }
             }
         }
 
+        this.parentNode.highlighted_index = 0;
+        var h = this.parentNode.highlighted_index;
+        var func = this.parentNode.selection_function;
+
         parent.select("ul").selectAll("li").data(matching_data).enter()
             .append("li")
                 .html(function(d) {return (typeof(d) === "string") ? d : d[search_key] })
-                .on("click",this.parentNode.selection_function);
+                .attr("class",function(d,i) {return (i==h ? "selected" : "unselected")})
+                .on("click",function(d,i) {
+                    parent.select("ul").selectAll("li").remove();
+                    parent.select("input").property("value","");
+                    func(d);
+                });
 
-        if (num_suggestions == 0) {
+        if (this.parentNode.num_suggestions == 0) {
             parent.select("ul").append("li").html("No matches");
-        }    
+        }
     }
 
     my.list = function(value) {

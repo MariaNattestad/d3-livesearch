@@ -4,6 +4,9 @@
 
 <head>
 <title>Live search examples</title>
+
+<link href="d3-livesearch.css" rel="stylesheet">
+
 </head>
 
 
@@ -23,12 +26,14 @@
 
 <script>
 
-function select_gene() {
+function select_gene(d) {
 	console.log("selecting gene");
+	console.log(d.gene);
 }
 
-function select_chromosome() {
+function select_chromosome(d) {
 	console.log("selecting chromosome");
+	console.log(d);
 }
 
 var annotation = [
@@ -50,11 +55,12 @@ var w=960,h=500,
         .attr("height",h);
 
 
-var LS = d3.livesearch()
-	.selection_function(function(d) {return d.func;})
-	.list(function(d) {return d.search_list})
-	.dictkey(function(d) {return d.search_key})
-	.max_suggestions_to_show(4);
+var LS = d3.livesearch();
+	// .max_suggestions_to_show(4);
+	// .selection_function(function(d) {return d.func;})
+	// .list(function(d) {return d.search_list})
+	// .dictkey(function(d) {return d.search_key})
+	
 
 
 // now we apply the returned function object my == tb on an enter selection
