@@ -82,7 +82,7 @@ d3.livesearch = function() {
 
         var search_key = this.parentNode.search_key;
         var search_list = this.parentNode.search_list;
-        var search_value = this.value;
+        var search_value = this.value.toUpperCase();
 
         if (search_value.length==0) { 
             parent.select("ul").html("");
@@ -100,7 +100,7 @@ d3.livesearch = function() {
             for (var i in search_list) {
                 if (search_list[i][search_key] == undefined) {
                     console.log(search_key + " is not in search_list[" + i + "]");
-                } else if (search_list[i][search_key].indexOf(search_value) != -1) {
+                } else if (search_list[i][search_key].toUpperCase().indexOf(search_value) != -1) {
                     matching_data.push(search_list[i]);
                     this.parentNode.num_suggestions++;
                     if (max_suggestions_to_show != undefined && this.parentNode.num_suggestions >= max_suggestions_to_show) {
@@ -110,7 +110,7 @@ d3.livesearch = function() {
             }
         } else {
             for (var i in search_list) {
-                if (search_list[i].indexOf(search_value) != -1) {
+                if (search_list[i].toUpperCase().indexOf(search_value) != -1) {
                     matching_data.push(search_list[i]);
                     this.parentNode.num_suggestions++;
                     if (max_suggestions_to_show != undefined && this.parentNode.num_suggestions >= max_suggestions_to_show) {
